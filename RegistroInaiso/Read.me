@@ -1,0 +1,8 @@
+ReadMe
+Esta aplicacion se ejecuta utilizando .net y sqlite, lo primero que se debe realizar es instalar estos dos elementos, luego se debe seguir los siguientes pasos:
+- Ejecutar el siguiente comando: Dotnet restore para restaurar los paquetes necesitados
+- Ejecutar el comando dotnet ef database drop y dotnet ef database update para generar una base de datos nueva y limpia
+- se deben cargar las seeds de usuarios y apps desde la aplicacion swagger, se puede cargar directamente la lista completa directamente en las funciones importUsers e importApps
+- Las reservas se deben cargar individualmente mediante la funcion CreateReservation, ya que este requiere solo los ids de los elementos y la fecha de reserva.
+- en el script Program.cs se debe colocar la url de la aplicacion que consumira la api en la funcion builder.WithOrigins("Url") con el fin de evitar problemas de permisos
+- para ejecutar la aplicacion se debe ejecutar el comando dotnet run
