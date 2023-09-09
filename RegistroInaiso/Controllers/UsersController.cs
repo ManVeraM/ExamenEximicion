@@ -116,6 +116,47 @@ namespace RegistroInaiso.Controllers
             return NoContent();
         }
 
+       // GET: api/Users/Reservations/{id}
+[HttpGet("Reservations/{id}")]
+public async Task<ActionResult<UserReservations>> GetUserReservations(long id)
+{
+    if (_context.Users == null)
+    {
+        return NotFound();
+    }
+
+    var user = await _context.Users.FindAsync(id);
+
+    if (user == null)
+    {
+        return NotFound();
+    }
+
+    // Obtener la fecha actual y las fechas límite para el último mes y el último año
+    var currentDate = DateTime.Now;
+    var lastMonthDate = currentDate.AddMonths(-1);
+    var lastYearDate = currentDate.AddYears(-1);
+
+    // Contar las reservaciones del último mes y el último año para el usuario
+    var reservationsLastMonth = await _context.Reservations
+        .Where(r => r.User_Id == id && r.ReservedAt >= lastMonthDate && r.ReservedAt <= currentDate)
+        .CountAsync();
+
+    var reservationsLastYear = await _context.Reservations
+        .Where(r => r.User_Id == id && r.ReservedAt >= lastYearDate && r.ReservedAt <= currentDate)
+        .CountAsync();
+
+    // Crear un objeto que contenga la información requerida
+    var userReservations = new UserReservations
+    {
+        UserName = user.Name,
+        ReservationsLastMonth = reservationsLastMonth,
+        ReservationsLastYear = reservationsLastYear
+    };
+
+    return userReservations;
+}
+
         private bool UserExists(long id)
         {
             return (_context.Users?.Any(e => e.Id == id)).GetValueOrDefault();

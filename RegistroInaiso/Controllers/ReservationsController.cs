@@ -130,6 +130,68 @@ namespace RegistroInaiso.Controllers
             return NoContent();
         }
 
+        [HttpGet("GetReservationsByUser")]
+        public async Task<ActionResult<IEnumerable<Reservation>>> GetReservationsByUser(long user_Id, int year, int month)
+        {
+            if (_context.Reservations == null)
+            {
+                return NotFound();
+            }
+
+            var reservations = await _context.Reservations
+                .Where(r => r.User_Id == user_Id &&
+                            r.ReservedAt.Year == year &&
+                            r.ReservedAt.Month == month)
+                .ToListAsync();
+
+            if (!reservations.Any())
+            {
+                return NotFound(); // Puedes cambiar esto a un mensaje más adecuado si lo deseas
+            }
+
+            return reservations;
+        }
+
+        [HttpPost("CreateReservation")]
+        public async Task<ActionResult<Reservation>> CreateReservation(DateTime reservedAt, long userId, long appId)
+        {
+            if (_context.Reservations == null)
+            {
+                return Problem("Entity set 'DataContext.Reservations' is null.");
+            }
+
+            // Verificar si ya existe una reserva para la fecha, usuario y aplicación proporcionados
+            var existingReservation = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.User_Id == userId && r.App_Id == appId && r.ReservedAt.Date == reservedAt.Date);
+
+            if (existingReservation != null)
+            {
+                return Conflict("Ya existe una reserva para esta fecha, usuario y aplicación.");
+            }
+
+            // Crear una nueva reserva
+            var reservation = new Reservation
+            {
+                ReservedAt = reservedAt,
+                User_Id = userId,
+                App_Id = appId,
+                // Puedes configurar otras propiedades de la reserva aquí si es necesario
+            };
+
+            _context.Reservations.Add(reservation);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Conflict("Error al crear la reserva.");
+            }
+
+            return CreatedAtAction("GetReservation", new { id = reservation.ReservedAt }, reservation);
+        }
+
         private bool ReservationExists(DateTime id)
         {
             return (_context.Reservations?.Any(e => e.ReservedAt == id)).GetValueOrDefault();
