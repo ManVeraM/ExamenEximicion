@@ -116,6 +116,34 @@ namespace RegistroInaiso.Controllers
             return NoContent();
         }
 
+        [HttpPost("ImportApps")]
+        public async Task<IActionResult> ImportApps([FromBody] List<App> apps)
+        {
+            if (apps == null || apps.Count == 0)
+            {
+                return BadRequest("La lista de usuarios está vacía o es nula.");
+            }
+
+            try
+            {
+                foreach (var app in apps)
+                {
+                    _context.Apps.Add(new App
+                    {
+                        Name = app.Name,
+                        Id = app.Id
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok("Apps importados exitosamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
         private bool AppExists(long id)
         {
             return (_context.Apps?.Any(e => e.Id == id)).GetValueOrDefault();

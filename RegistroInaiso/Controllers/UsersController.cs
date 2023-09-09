@@ -155,7 +155,35 @@ public async Task<ActionResult<UserReservations>> GetUserReservations(long id)
     };
 
     return userReservations;
+
 }
+    [HttpPost("ImportUsers")]
+    public async Task<IActionResult> ImportUsers([FromBody] List<User> users)
+    {
+        if (users == null || users.Count == 0)
+        {
+            return BadRequest("La lista de usuarios está vacía o es nula.");
+        }
+
+        try
+        {
+            foreach (var user in users)
+            {
+                _context.Users.Add(new User
+                {
+                    Name = user.Name,
+                    // Configura otras propiedades del usuario según sea necesario
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("Usuarios importados exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+        }
+    }
 
         private bool UserExists(long id)
         {

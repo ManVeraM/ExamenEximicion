@@ -192,6 +192,12 @@ namespace RegistroInaiso.Controllers
             return CreatedAtAction("GetReservation", new { id = reservation.ReservedAt }, reservation);
         }
 
+
+        private bool AppExists(long id)
+        {
+            return (_context.Apps?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
         private bool ReservationExists(DateTime id)
         {
             return (_context.Reservations?.Any(e => e.ReservedAt == id)).GetValueOrDefault();
