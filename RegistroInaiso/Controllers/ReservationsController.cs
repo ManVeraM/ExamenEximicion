@@ -153,44 +153,61 @@ namespace RegistroInaiso.Controllers
         }
 
         [HttpPost("CreateReservation")]
-        public async Task<ActionResult<Reservation>> CreateReservation(DateTime reservedAt, long userId, long appId)
-        {
-            if (_context.Reservations == null)
-            {
-                return Problem("Entity set 'DataContext.Reservations' is null.");
-            }
+public async Task<ActionResult<Reservation>> CreateReservation(DateTime reservedAt, long userId, long appId)
+{
+    if (_context.Reservations == null)
+    {
+        return Problem("Entity set 'DataContext.Reservations' is null.");
+    }
 
-            // Verificar si ya existe una reserva para la fecha, usuario y aplicación proporcionados
-            var existingReservation = await _context.Reservations
-                .FirstOrDefaultAsync(r => r.User_Id == userId && r.App_Id == appId && r.ReservedAt.Date == reservedAt.Date);
+    // Verificar si ya existe una reserva para la fecha, usuario y aplicación proporcionados
+    var existingReservation = await _context.Reservations
+        .FirstOrDefaultAsync(r => r.User_Id == userId && r.App_Id == appId && r.ReservedAt.Date == reservedAt.Date);
 
-            if (existingReservation != null)
-            {
-                return Conflict("Ya existe una reserva para esta fecha, usuario y aplicación.");
-            }
+    if (existingReservation != null)
+    {
+        return Conflict("Ya existe una reserva para esta fecha, usuario y aplicación.");
+    }
 
-            // Crear una nueva reserva
-            var reservation = new Reservation
-            {
-                ReservedAt = reservedAt,
-                User_Id = userId,
-                App_Id = appId,
-                // Puedes configurar otras propiedades de la reserva aquí si es necesario
-            };
+    // Buscar el nombre de usuario en la base de datos
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
-            _context.Reservations.Add(reservation);
+    if (user == null)
+    {
+        return NotFound("Usuario no encontrado");
+    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return Conflict("Error al crear la reserva.");
-            }
+    var app = await _context.Apps.FirstOrDefaultAsync(u => u.Id == appId);
 
-            return CreatedAtAction("GetReservation", new { id = reservation.ReservedAt }, reservation);
-        }
+    if (app == null)
+    {
+        return NotFound("App no encontrado");
+    }
+
+    // Crear una nueva reserva
+    var reservation = new Reservation
+    {
+        ReservedAt = reservedAt,
+        User_Id = userId,
+        App_Id = appId,
+        User_name= user.Name,
+        App_name= app.Name, // Asignar el nombre de usuario
+        // Puedes configurar otras propiedades de la reserva aquí si es necesario
+    };
+
+    _context.Reservations.Add(reservation);
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateException)
+    {
+        return Conflict("Error al crear la reserva.");
+    }
+
+    return CreatedAtAction("GetReservation", new { id = reservation.ReservedAt }, reservation);
+}
 
 
         private bool AppExists(long id)
